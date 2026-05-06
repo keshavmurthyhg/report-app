@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate RCA Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Generate RCA Report</h1>
+
+    <!-- INPUT -->
+    <form id="reportForm">
+
+        <label>Incident Number</label><br>
+        <input
+            type="text"
+            id="incident_number"
+            placeholder="Enter Incident Number"
+            required
+        >
+
+        <br><br>
+
+        <button type="button" onclick="loadPreview()">
+            Preview Report
+        </button>
+
+    </form>
+
+    <br>
+
+    <!-- PREVIEW -->
+    <div id="previewContainer"></div>
+
+    <br>
+    <a href="/">Back Home</a>
+</div>
+
+<script>
+function loadPreview() {
+
+    const incident = document.getElementById("incident_number").value;
+
+    if (!incident) {
+        alert("Please enter incident number");
+        return;
+    }
+
+    fetch("/preview-report", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `incident_number=${incident}`
+    })
+    .then(res => res.text())
+    .then(html => {
+        document.getElementById("previewContainer").innerHTML = html;
+    })
+    .catch(() => {
+        document.getElementById("previewContainer").innerHTML =
+            "<p style='color:red;'>Error loading preview</p>";
+    });
+}
+</script>
+
+</body>
+</html>

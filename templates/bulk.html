@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bulk Generate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Bulk Report Generator</h1>
+
+    <p>
+        Enter multiple incident numbers
+        separated by commas
+    </p>
+
+    <form
+        action="/generate-bulk"
+        method="POST"
+    >
+
+        <textarea
+            name="incident_numbers"
+            rows="8"
+            cols="50"
+            placeholder="INC12345, INC67890"
+            required
+        ></textarea>
+
+        <br><br>
+
+        <select
+            name="report_type"
+            required
+        >
+            <option value="">
+                Select Output Type
+            </option>
+            <option value="word">
+                Word Reports
+            </option>
+            <option value="pdf">
+                PDF Reports
+            </option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">
+            Generate Bulk Reports
+        </button>
+    </form>
+
+    <br>
+    <a href="/">Back Home</a>
+
+</div>
+
+</body>
+</html>

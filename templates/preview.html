@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Preview - {{ data.number }}</h2>
+
+    <!-- BASIC INFO -->
+    <table>
+        <tr><th>Incident</th><td>{{ data.number }}</td></tr>
+        <tr><th>Azure Bug</th><td>{{ data.azure_bug }}</td></tr>
+        <tr><th>PTC Case</th><td>{{ data.ptc_case }}</td></tr>
+        <tr><th>Priority</th><td>{{ data.priority }}</td></tr>
+    </table>
+
+    <br>
+
+    <!-- EDITABLE RCA -->
+    <form action="/generate-report-final" method="POST" enctype="multipart/form-data">
+
+        <input type="hidden" name="incident_number" value="{{ data.number }}">
+
+        <h3>Problem Statement</h3>
+        <textarea name="problem" rows="6">{{ data.problem }}</textarea>
+
+        <h3>Root Cause</h3>
+        <textarea name="analysis" rows="6">{{ data.analysis }}</textarea>
+
+        <h3>Resolution</h3>
+        <textarea name="resolution" rows="6">{{ data.resolution }}</textarea>
+
+        <br><br>
+
+        <label>Upload Images (optional)</label>
+        <input type="file" name="images" multiple>
+
+        <br><br>
+
+        <select name="report_type" required>
+            <option value="word">Word</option>
+            <option value="pdf">PDF</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">Generate Final Report</button>
+
+    </form>
+
+</div>
+
+</body>
+</html>
