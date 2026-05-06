@@ -26,7 +26,8 @@ h1 {
 }
 
 button {
-    width: 100%;
+    width: auto !important;  /* stop stretching */
+    display: inline-block;
     background: #1f4e79;
     color: white;
     border: none;
@@ -36,8 +37,19 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background: #163a5c;
+/* Primary button (Preview) */
+#reportForm button {
+    padding: 10px 20px;
+    background-color: #2f5b84;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    min-width: 180px;
+}
+
+#reportForm button:hover {
+    background-color: #244a6d;
 }
 
 input[type="file"] {
@@ -68,4 +80,34 @@ input[type="file"] {
 
 .btn:hover {
     background-color: #244a6d;
+}
+
+/* TABLE FIX */
+.tbl {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+.tbl td, .tbl th {
+    border: 1px solid #333;
+    padding: 8px;
+    vertical-align: top;
+}
+
+/* Header cells */
+.hdr {
+    font-weight: bold;
+    background-color: #e6e6e6;
+    width: 180px;   /* keeps structure stable */
+}
+
+#previewContainer {
+    margin-top: 20px;
+}
+
+/* Preview block */
+.container h2 {
+    margin-bottom: 15px;
 }
