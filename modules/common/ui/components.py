@@ -7,7 +7,7 @@ from modules.common.utils.text_cleaner import format_description
 def render_preview_table(data):
 
     st.markdown("""
-    <table style="width:100%; border-collapse: collapse; border:2px solid black;">
+    <table class="preview-table">
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
@@ -44,7 +44,7 @@ def render_description_table(data):
     desc = format_description(data.get("description"))
 
     st.markdown(f"""
-    <table style="width:100%; border-collapse: collapse; border:2px solid black;">
+    <table class="preview-table">
     <tr>
         <td><b>SHORT DESCRIPTION</b></td>
         <td><b>DESCRIPTION</b></td>

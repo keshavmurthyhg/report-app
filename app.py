@@ -61,9 +61,7 @@ def preview_report():
 
     preview_html = render_preview_html(data)
 
-    buttons_html = render_download_buttons(incident_number)
-
-    return preview_html + buttons_html
+    return preview_html
 
 
 # -----------------------------

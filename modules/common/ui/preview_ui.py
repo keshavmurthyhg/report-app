@@ -18,10 +18,13 @@ def _link(value, type_):
 
     if type_ == "incident":
         url = f"https://volvoitsm.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number={value}"
+
     elif type_ == "azure":
         url = f"https://dev.azure.com/VolvoGroup-DVP/VCEWindchillPLM/_workitems/edit/{value}"
+
     elif type_ == "ptc":
         url = f"https://support.ptc.com/appserver/cs/view/solution.jsp?n={value}"
+
     else:
         return value
 
@@ -44,8 +47,11 @@ def render_preview_html(
 
     style = get_table_style()
 
+    # ----------------------------
+    # INCIDENT TABLE
+    # ----------------------------
     table1 = f"""
-    <table class="tbl">
+    <table class="tbl preview-table">
         <tr>
             <td class="hdr">INCIDENT</td>
             <td>{_link(data.get("number"), "incident")}</td>
@@ -73,8 +79,11 @@ def render_preview_html(
     </table>
     """
 
+    # ----------------------------
+    # DESCRIPTION TABLE
+    # ----------------------------
     table2 = f"""
-    <table class="tbl">
+    <table class="tbl preview-table">
         <tr>
             <td class="hdr">SHORT DESCRIPTION</td>
             <td class="hdr">DESCRIPTION</td>
@@ -86,20 +95,25 @@ def render_preview_html(
     </table>
     """
 
+    # ----------------------------
+    # MAIN HTML WRAPPER
+    # ----------------------------
     html = f"""
-    <div class="container">
-        <h2>Preview</h2>
-        {style}
-        {table1}
-        <br>
-        {table2}
+    <div class="preview-wrapper">
+        <div class="preview-table-container">
+            {style}
+            {table1}
+            <br>
+            {table2}
     """
 
-    # RCA section
+    # ----------------------------
+    # RCA TABLE
+    # ----------------------------
     if show_rca:
         html += f"""
         <br>
-        <table class="tbl">
+        <table class="tbl preview-table">
             <tr>
                 <td class="hdr">PROBLEM STATEMENT</td>
                 <td>{_val(root or data.get("problem"))}</td>
@@ -115,6 +129,12 @@ def render_preview_html(
         </table>
         """
 
-    html += "</div>"
+    # ----------------------------
+    # CLOSE WRAPPERS
+    # ----------------------------
+    html += """
+        </div>
+    </div>
+    """
 
     return html
