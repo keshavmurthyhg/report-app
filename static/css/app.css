@@ -84,12 +84,6 @@ body {
     display: block;
 }
 
-/* ---------------- Left Panel ---------------- */
-
-/*.left-panel {
-    width: 100%;
-}
-
 /* ---------------- Right Panel ---------------- */
 
 .right-panel {
@@ -112,7 +106,7 @@ body {
 /* ---------------- Forms ---------------- */
 
 textarea,
-input,
+input[type="text"],
 select {
     width: 100%;
     max-width: 100%;
@@ -123,6 +117,9 @@ select {
 }
 
 textarea {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
     resize: vertical;
 }
 
@@ -141,6 +138,10 @@ button:hover {
     opacity: 0.9;
 }
 
+.secondary-btn {
+    background: #4b5563;
+}
+
 /* ---------------- Preview ---------------- */
 
 #previewContainer {
@@ -151,20 +152,14 @@ button:hover {
     max-height: 700px;
 }
 
-/* Preview wrapper */
-
 .preview-wrapper {
     width: 100%;
 }
-
-/* Scroll only if absolutely needed */
 
 .preview-table-container {
     width: 100%;
     overflow-x: auto;
 }
-
-/* Tables */
 
 .preview-table,
 .tbl {
@@ -173,8 +168,6 @@ button:hover {
     table-layout: fixed;
     background: white;
 }
-
-/* Cells */
 
 .preview-table td,
 .preview-table th,
@@ -189,8 +182,6 @@ button:hover {
     line-height: 1.5;
 }
 
-/* Header cells */
-
 .tbl .hdr {
     background: #f3f4f6;
     font-weight: bold;
@@ -199,39 +190,57 @@ button:hover {
 
 /* ---------------- Download Buttons ---------------- */
 
-.download-section {
-    margin-top: 20px;
-}
-
-.btn-group {
+.download-btn-row {
     display: flex;
     gap: 10px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
-.btn-group form {
-    display: inline-block;
+.download-btn-row form {
+    margin: 0;
 }
 
-/* ---------------- Responsive ---------------- */
+/* ---------------- Upload Section ---------------- */
 
-@media (max-width: 1200px) {
-    .content-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-        width: 240px;
-    }
-
-    .right-panel {
-        max-width: 100%;
-    }
+.upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
 }
+
+.image-input {
+    width: auto !important;
+    max-width: 220px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}
+
+.uploaded-file-chip {
+    background: #eef2f7;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.uploaded-file-chip span {
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+}
+
+/* ---------------- Sidebar Blocks ---------------- */
 
 .filter-box {
     margin-bottom: 25px;
 }
+
+/* ---------------- Home Button ---------------- */
 
 .sidebar-btn {
     display: inline-flex;
@@ -246,22 +255,17 @@ button:hover {
     margin-bottom: 10px;
 }
 
-@media (max-width: 900px) {
-    .top-header {
-        grid-template-columns: 1fr;
-    }
-
-    .kpi-section {
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
+.sidebar-home-fixed {
+    display: inline-block;
+    background: #2f5b84;
+    color: white;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    margin-top: 10px;
 }
 
-.top-nav {
-    display: flex;
-    gap: 15px;
-    margin-left: 30px;
-}
+/* ---------------- Header Navigation ---------------- */
 
 .header-left {
     display: flex;
@@ -269,6 +273,11 @@ button:hover {
     gap: 8px;
 }
 
+.top-nav {
+    display: flex;
+    gap: 15px;
+    margin-left: 30px;
+}
 
 .top-nav a {
     text-decoration: none;
@@ -280,41 +289,25 @@ button:hover {
     text-decoration: underline;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 1200px) {
+    .sidebar {
+        width: 240px;
+    }
+
+    .right-panel {
+        max-width: 100%;
+    }
 }
 
-.download-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
+@media (max-width: 900px) {
+    .top-header {
+        grid-template-columns: 1fr;
+    }
 
-.download-btn-row form {
-    margin: 0;
-}
-
-.secondary-btn {
-    background: #4b5563;
-}
-
-
-.logo-section {
-    position: sticky;
-    top: 0;
-    background: #1f2937;
-    z-index: 100;
-    padding-bottom: 15px;
-}
-
-.sidebar-home-fixed {
-    display: inline-block;
-    background: #2f5b84;
-    color: white;
-    text-decoration: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    margin-top: 10px;
+    .kpi-section {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
 }

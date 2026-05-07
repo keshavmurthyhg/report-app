@@ -1,4 +1,7 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify, session
+from flask import send_from_directory
+
+import uuid
 import os
 
 # -----------------------------
@@ -25,7 +28,7 @@ from modules.common.ui.preview_ui import render_preview_html
 
 
 app = Flask(__name__)
-
+app.secret_key = "report_app_secret"
 UPLOAD_FOLDER = "uploads"
 OUTPUT_FOLDER = "outputs"
 
@@ -39,6 +42,13 @@ app.config["OUTPUT_FOLDER"] = OUTPUT_FOLDER
 @app.route("/")
 def home():
     return render_template("index.html")
+
+# -----------------------------
+# Serve uploaded images
+# -----------------------------
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory("uploads", filename)
 
 
 # -----------------------------
@@ -62,6 +72,92 @@ def preview_report():
     preview_html = render_preview_html(data)
 
     return preview_html
+
+# -----------------------------
+# Get RCA data
+# -----------------------------
+@app.route("/get-rca-data", methods=["POST"])
+def get_rca_data():
+    incident_number = request.form.get("incident_number")
+    data = get_preview_data(incident_number)
+
+    return jsonify({
+        "problem": data.get("problem"),
+        "analysis": data.get("analysis"),
+        "resolution": data.get("resolution")
+    })
+
+# -----------------------------
+# Update Preview data
+# -----------------------------
+@app.route("/update-preview", methods=["POST"])
+def update_preview():
+
+    incident_number = request.form.get("incident_number")
+    data = get_preview_data(incident_number)
+
+    # preserve edited values
+    final_problem = request.form.get("problem") or data.get("problem")
+    final_analysis = request.form.get("analysis") or data.get("analysis")
+    final_resolution = request.form.get("resolution") or data.get("resolution")
+
+    data["problem"] = final_problem
+    data["analysis"] = final_analysis
+    data["resolution"] = final_resolution
+
+    saved_problem_images = []
+    saved_root_images = []
+    saved_resolution_images = []
+
+    os.makedirs("uploads", exist_ok=True)
+
+    # save problem images
+    for file in request.files.getlist("problem_images"):
+        if file.filename:
+            filename = f"{uuid.uuid4()}_{file.filename}"
+            filepath = os.path.join("uploads", filename)
+            file.save(filepath)
+            saved_problem_images.append(filepath)
+
+    # save root images
+    for file in request.files.getlist("root_images"):
+        if file.filename:
+            filename = f"{uuid.uuid4()}_{file.filename}"
+            filepath = os.path.join("uploads", filename)
+            file.save(filepath)
+            saved_root_images.append(filepath)
+
+    # save resolution images
+    for file in request.files.getlist("resolution_images"):
+        if file.filename:
+            filename = f"{uuid.uuid4()}_{file.filename}"
+            filepath = os.path.join("uploads", filename)
+            file.save(filepath)
+            saved_resolution_images.append(filepath)
+
+    # store edited content for final download
+    session["edited_data"] = {
+        "incident_number": incident_number,
+        "problem": final_problem,
+        "analysis": final_analysis,
+        "resolution": final_resolution,
+        "problem_images": saved_problem_images,
+        "root_images": saved_root_images,
+        "resolution_images": saved_resolution_images
+    }
+
+    preview_html = render_preview_html(
+        data,
+        root=final_problem,
+        l2=final_analysis,
+        resolution=final_resolution,
+        problem_images=saved_problem_images,
+        root_images=saved_root_images,
+        resolution_images=saved_resolution_images
+    )
+
+    return preview_html
+
 
 
 # -----------------------------
@@ -93,32 +189,31 @@ def generate_report_final():
         incident_number = request.form.get("incident_number")
         report_type = request.form.get("report_type")
 
-        # reload base data
         data = load_incident_data(incident_number)
 
-        # override RCA from UI
-        data["problem"] = request.form.get("problem")
-        data["analysis"] = request.form.get("analysis")
-        data["resolution"] = request.form.get("resolution")
+        edited_data = session.get("edited_data", {})
 
-        # -----------------------------
-        # IMAGE HANDLING
-        # -----------------------------
-        images = {"root": [], "l2": [], "res": []}
+        data["problem"] = edited_data.get(
+            "problem",
+            data.get("problem")
+        )
 
-        files = request.files.getlist("images")
+        data["analysis"] = edited_data.get(
+            "analysis",
+            data.get("analysis")
+        )
 
-        for f in files:
-            if f.filename:
-                path = os.path.join("uploads", f.filename)
-                f.save(path)
+        data["resolution"] = edited_data.get(
+            "resolution",
+            data.get("resolution")
+        )
 
-                # currently attach to resolution
-                images["res"].append(path)
+        images = {
+            "root": edited_data.get("problem_images", []),
+            "l2": edited_data.get("root_images", []),
+            "res": edited_data.get("resolution_images", [])
+        }
 
-        # -----------------------------
-        # GENERATE
-        # -----------------------------
         if report_type == "pdf":
             buffer = generate_pdf(
                 data,

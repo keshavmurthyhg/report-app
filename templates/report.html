@@ -4,32 +4,21 @@
 RCA Report Generator
 {% endblock %}
 
-
-<!-- SIDEBAR -->
 {% block sidebar %}
 
-<!-- Incident Selection -->
 <div class="filter-box">
     <h3>Incident Actions</h3>
 
-    <form id="reportForm">
+    <label>Incident Number</label>
+    <input type="text"
+           id="incident_number"
+           placeholder="Enter Incident Number">
 
-        <label>Incident Number</label>
-        <input
-            type="text"
-            id="incident_number"
-            placeholder="Enter Incident Number"
-            required
-        >
-
-        <button type="button" onclick="loadPreview()">
-            Preview Report
-        </button>
-    </form>
+    <button type="button" onclick="loadPreview()">
+        Preview Report
+    </button>
 </div>
 
-
-<!-- Filters -->
 <div class="filter-box">
     <h3>Filters</h3>
 
@@ -50,35 +39,26 @@ RCA Report Generator
     </select>
 </div>
 
-
-<!-- Downloads -->
 <div class="filter-box">
     <h3>Downloads</h3>
-
     <div id="downloadSidebar">
         Download buttons appear after preview
     </div>
 </div>
 
-
-<!-- Navigation -->
 <div class="filter-box">
     <h3>Actions</h3>
 
-    <div class="action-buttons">
-        <button
-            type="button"
+    <button type="button"
             class="secondary-btn"
             onclick="clearPreview()">
-            Clear
-        </button>
-    </div>
+        Clear
+    </button>
 </div>
- 
+
 {% endblock %}
 
 
-<!-- KPI -->
 {% block kpi %}
 <div class="kpi-card">Reports Today: 12</div>
 <div class="kpi-card">Pending: 4</div>
@@ -86,18 +66,14 @@ RCA Report Generator
 {% endblock %}
 
 
-<!-- MAIN CONTENT -->
 {% block content %}
 
 <div class="content-grid">
-
-    <!-- RIGHT PANEL ONLY -->
     <div class="right-panel">
 
         <!-- Preview -->
         <div class="card">
             <h3>Preview</h3>
-
             <div id="previewContainer">
                 Preview will appear here
             </div>
@@ -108,33 +84,59 @@ RCA Report Generator
             <h3>Editable RCA</h3>
 
             <label>Problem Statement</label>
-            <textarea rows="4"></textarea>
+            <textarea id="problem_statement" rows="4"></textarea>
+
+            <div class="upload-row">
+                <input type="file"
+                       id="problem_images"
+                       multiple
+                       class="image-input">
+
+                <div id="problem_preview_files"></div>
+            </div>
 
             <label>Root Cause</label>
-            <textarea rows="4"></textarea>
+            <textarea id="root_cause" rows="4"></textarea>
+
+            <div class="upload-row">
+                <input type="file"
+                       id="root_images"
+                       multiple
+                       class="image-input">
+
+                <div id="root_preview_files"></div>
+            </div>
 
             <label>Resolution</label>
-            <textarea rows="4"></textarea>
-        </div>
+            <textarea id="resolution_text" rows="4"></textarea>
 
-        <!-- Upload -->
-        <div class="card">
-            <h3>Image Upload</h3>
-            <input type="file" multiple>
-        </div>
+            <div class="upload-row">
+                <input type="file"
+                       id="resolution_images"
+                       multiple
+                       class="image-input">
 
+                <div id="resolution_preview_files"></div>
+            </div>
+
+            <button type="button" onclick="updatePreview()">
+                Update Preview
+            </button>
+        </div>
     </div>
 </div>
 
 
 <script>
+let selectedFiles = {
+    problem: [],
+    root: [],
+    resolution: []
+};
+
+
 function loadPreview() {
     const incident = document.getElementById("incident_number").value;
-
-    if (!incident) {
-        alert("Please enter incident number");
-        return;
-    }
 
     fetch("/preview-report", {
         method: "POST",
@@ -147,17 +149,35 @@ function loadPreview() {
     .then(html => {
         document.getElementById("previewContainer").innerHTML = html;
 
-        // Generate sidebar download buttons separately
+        return fetch("/get-rca-data", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `incident_number=${incident}`
+        });
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("problem_statement").value =
+            data.problem || "";
+
+        document.getElementById("root_cause").value =
+            data.analysis || "";
+
+        document.getElementById("resolution_text").value =
+            data.resolution || "";
+
         document.getElementById("downloadSidebar").innerHTML = `
             <div class="download-btn-row">
 
-                <form action="/generate-report" method="POST">
+                <form action="/generate-report-final" method="POST">
                     <input type="hidden" name="incident_number" value="${incident}">
                     <input type="hidden" name="report_type" value="word">
                     <button type="submit">Word</button>
                 </form>
 
-                <form action="/generate-report" method="POST">
+                <form action="/generate-report-final" method="POST">
                     <input type="hidden" name="incident_number" value="${incident}">
                     <input type="hidden" name="report_type" value="pdf">
                     <button type="submit">PDF</button>
@@ -165,17 +185,87 @@ function loadPreview() {
 
                 <form action="/generate-bulk" method="POST">
                     <input type="hidden" name="incident_numbers" value="${incident}">
-                    <input type="hidden" name="report_type" value="word">
                     <button type="submit">ZIP</button>
                 </form>
 
             </div>
         `;
-        
+    });
+}
+
+
+function setupFilePreview(inputId, previewId, key) {
+    const input = document.getElementById(inputId);
+
+    input.addEventListener("change", function () {
+        const files = Array.from(input.files);
+
+        files.forEach(file => {
+            selectedFiles[key].push(file);
+        });
+
+        renderFilePreview(previewId, key);
+        input.value = "";
+    });
+}
+
+
+function renderFilePreview(previewId, key) {
+    const container = document.getElementById(previewId);
+
+    container.innerHTML = "";
+
+    selectedFiles[key].forEach((file, index) => {
+        container.innerHTML += `
+            <div class="uploaded-file-chip">
+                ${file.name}
+                <span onclick="removeFile('${key}', ${index}, '${previewId}')">✕</span>
+            </div>
+        `;
+    });
+}
+
+
+function removeFile(key, index, previewId) {
+    selectedFiles[key].splice(index, 1);
+    renderFilePreview(previewId, key);
+}
+
+
+setupFilePreview("problem_images", "problem_preview_files", "problem");
+setupFilePreview("root_images", "root_preview_files", "root");
+setupFilePreview("resolution_images", "resolution_preview_files", "resolution");
+
+
+function updatePreview() {
+    const incident = document.getElementById("incident_number").value;
+
+    const formData = new FormData();
+
+    formData.append("incident_number", incident);
+    formData.append("problem", document.getElementById("problem_statement").value);
+    formData.append("analysis", document.getElementById("root_cause").value);
+    formData.append("resolution", document.getElementById("resolution_text").value);
+
+    selectedFiles.problem.forEach(file => {
+        formData.append("problem_images", file);
+    });
+
+    selectedFiles.root.forEach(file => {
+        formData.append("root_images", file);
+    });
+
+    selectedFiles.resolution.forEach(file => {
+        formData.append("resolution_images", file);
+    });
+
+    fetch("/update-preview", {
+        method: "POST",
+        body: formData
     })
-    .catch(() => {
-        document.getElementById("previewContainer").innerHTML =
-            "<p style='color:red;'>Error loading preview</p>";
+    .then(res => res.text())
+    .then(html => {
+        document.getElementById("previewContainer").innerHTML = html;
     });
 }
 
@@ -184,10 +274,20 @@ function clearPreview() {
     document.getElementById("previewContainer").innerHTML =
         "Preview will appear here";
 
+    document.getElementById("problem_statement").value = "";
+    document.getElementById("root_cause").value = "";
+    document.getElementById("resolution_text").value = "";
+
+    selectedFiles.problem = [];
+    selectedFiles.root = [];
+    selectedFiles.resolution = [];
+
+    document.getElementById("problem_preview_files").innerHTML = "";
+    document.getElementById("root_preview_files").innerHTML = "";
+    document.getElementById("resolution_preview_files").innerHTML = "";
+
     document.getElementById("downloadSidebar").innerHTML =
         "Download buttons appear after preview";
-
-    document.getElementById("incident_number").value = "";
 }
 </script>
 
