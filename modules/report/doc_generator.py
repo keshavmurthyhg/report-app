@@ -5,25 +5,12 @@ from modules.report.renderers.word_renderer import generate_word_doc
 from modules.common.utils.text_cleaner import format_description
 from modules.common.utils.parsers import extract_azure_id
 
-# RCA service
 from modules.report.services.rca_service import build_rca
 
 
 def enrich_data(data):
-    """
-    Common enrichment layer for:
-    - Single PDF
-    - Single Word
-    - Bulk PDF
-    - Bulk Word
-    """
-
     safe_data = data.copy()
 
-    # -----------------------------------
-    # AZURE BUG FIX
-    # Strictly extract only from resolution notes
-    # -----------------------------------
     azure_value = extract_azure_id(
         str(
             safe_data.get(
@@ -36,9 +23,7 @@ def enrich_data(data):
     safe_data["azure_bug"] = (
         azure_value if azure_value else "-"
     )
-    # -----------------------------------
-    # PTC CASE FIX
-    # -----------------------------------
+
     ptc_value = (
         safe_data.get("ptc_case")
         or safe_data.get("vendor ticket")
@@ -51,23 +36,12 @@ def enrich_data(data):
 
 
 def prepare_data(data):
-    """
-    Single source of truth for:
-    UI preview
-    PDF
-    Word
-    Bulk PDF
-    Bulk Word
-    """
-
     safe_data = enrich_data(data)
 
-    # Keep description formatting
     safe_data["description"] = format_description(
         safe_data.get("description")
     )
 
-    # RCA generation
     rca = build_rca(safe_data)
 
     safe_data["problem"] = rca.get(
@@ -89,17 +63,10 @@ def prepare_data(data):
 
 
 def get_download_filename(data, extension):
-    """
-    Generates filename format:
-    INC109720389_24Apr2026.pdf
-    INC109720389_24Apr2026.docx
-    """
-
     incident_number = str(
         data.get("number", "incident_report")
     ).strip()
 
-    # DDMMMYYYY format
     current_date = datetime.now().strftime("%d%b%Y")
 
     return f"{incident_number}_{current_date}.{extension}"
@@ -117,11 +84,16 @@ def generate_pdf(
 ):
     prepared = prepare_data(data)
 
+    # preserve edited RCA
+    final_root = root if root else prepared.get("problem")
+    final_l2 = l2 if l2 else prepared.get("analysis")
+    final_res = res if res else prepared.get("resolution")
+
     pdf_buffer = generate_pdf_doc(
         data=prepared,
-        root=prepared.get("problem"),
-        l2=prepared.get("analysis"),
-        res=prepared.get("resolution"),
+        root=final_root,
+        l2=final_l2,
+        res=final_res,
         images=images or {}
     )
 
@@ -141,11 +113,16 @@ def generate_word_doc_wrapper(
 ):
     prepared = prepare_data(data)
 
+    # preserve edited RCA
+    final_root = root if root else prepared.get("problem")
+    final_l2 = l2 if l2 else prepared.get("analysis")
+    final_res = res if res else prepared.get("resolution")
+
     word_buffer = generate_word_doc(
         data=prepared,
-        root=prepared.get("problem"),
-        l2=prepared.get("analysis"),
-        res=prepared.get("resolution"),
+        root=final_root,
+        l2=final_l2,
+        res=final_res,
         images=images or {},
         ppt_data=ppt_data
     )
