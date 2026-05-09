@@ -1,58 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Enterprise Ops Platform</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <meta charset="UTF-8">
+    <!--<title>Ops Platform</title>-->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body>
 
 <div class="app-layout">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo-section">
-            <h2>Ops Platform</h2>
+    <!-- SIDEBAR -->
+    <aside class="sidebar compact-sidebar">
 
-            <a href="/" class="sidebar-home-fixed">
-                🏠 Home
-            </a>
+        <!-- App Title -->
+        <div class="sidebar-title">
+            Ops Platform
         </div>
 
-        <div class="sidebar-filters">
-            {% block sidebar %}{% endblock %}
-        </div>
+        {% block sidebar %}
+        {% endblock %}
+
     </aside>
 
 
-    <!-- Main Content -->
-    <main class="main-content">
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
 
-        <header class="top-header">
+        <!-- REMOVE OLD HEADER COMPLETELY -->
+        <main class="content-area">
+            {% block content %}
+            {% endblock %}
+        </main>
 
-            <div class="header-left">
-                <h1>{% block page_title %}{% endblock %}</h1>
-
-                <!-- moved module navigation here -->
-                <div class="top-nav">
-                    <a href="/report">RCA</a>
-                    <a href="/bulk">Bulk</a>
-                    <a href="/search">Search</a>
-                    <a href="/converter">Converter</a>
-                    <a href="/compare">Compare</a>
-                </div>
-            </div>
-
-            <div class="kpi-section">
-                {% block kpi %}{% endblock %}
-            </div>
-        </header>
-
-
-        <section class="content-area">
-            {% block content %}{% endblock %}
-        </section>
-
-    </main>
+    </div>
 
 </div>
 

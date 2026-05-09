@@ -10,7 +10,9 @@ from flask import (
 
 import uuid
 import os
-
+import zipfile
+from io import BytesIO
+from flask import send_file
 from modules.report.report_service import (
     generate_incident_report,
     load_incident_data
@@ -25,9 +27,14 @@ from modules.report.doc_generator import (
 
 from modules.common.ui.preview_ui import render_preview_html
 
+
 app = Flask(__name__)
 app.secret_key = "report_app_secret"
 
+
+# -----------------------------
+# FOLDERS
+# -----------------------------
 UPLOAD_FOLDER = "uploads"
 OUTPUT_FOLDER = "outputs"
 
@@ -38,130 +45,313 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["OUTPUT_FOLDER"] = OUTPUT_FOLDER
 
 
+# -----------------------------
+# HOME
+# -----------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
+# -----------------------------
+# SERVE UPLOADED IMAGES
+# -----------------------------
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory("uploads", filename)
 
 
+# -----------------------------
+# REPORT PAGE
+# -----------------------------
 @app.route("/report")
 def report_page():
     return render_template("report.html")
 
 
-# -----------------------------------
-# Preview
-# -----------------------------------
-@app.route("/preview-report", methods=["POST"])
-def preview_report():
-    incident_number = request.form.get("incident_number")
-
-    data = get_preview_data(incident_number)
-
-    preview_html = render_preview_html(data)
-
-    return preview_html
-
-
-# -----------------------------------
-# Load editable RCA
-# -----------------------------------
+# -----------------------------
+# PREVIEW + FILTER LOAD
+# Called from new toolbar Preview button
+# -----------------------------
 @app.route("/get-rca-data", methods=["POST"])
 def get_rca_data():
-    incident_number = request.form.get("incident_number")
-    data = get_preview_data(incident_number)
+    try:
+        data = request.get_json()
 
-    return jsonify({
-        "problem": data.get("problem"),
-        "analysis": data.get("analysis"),
-        "resolution": data.get("resolution")
-    })
+        incident_number = data.get("incident_number")
+        priority = data.get("priority")
+        vendor = data.get("vendor")
+
+        if not incident_number:
+            return jsonify({
+                "error": "Incident number required"
+            })
+
+        incident_data = get_preview_data(incident_number)
+
+        if not incident_data:
+            return jsonify({
+                "error": "Incident not found"
+            })
+
+        # Optional filter validation
+        if priority and priority != "All":
+            if incident_data.get("priority") != priority:
+                return jsonify({
+                    "error": "No incidents found for selected priority"
+                })
+
+        if vendor and vendor != "All":
+            if incident_data.get("vendor") != vendor:
+                return jsonify({
+                    "error": "No incidents found for selected vendor"
+                })
+
+        preview_html = render_preview_html(incident_data)
+
+        return jsonify({
+            "preview_html": preview_html,
+            "problem_statement": incident_data.get("problem", ""),
+            "root_cause": incident_data.get("analysis", ""),
+            "resolution": incident_data.get("resolution", "")
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        })
 
 
-# -----------------------------------
-# Update Preview
-# -----------------------------------
+# -----------------------------
+# UPDATE PREVIEW AFTER EDITS
+# -----------------------------
 @app.route("/update-preview", methods=["POST"])
 def update_preview():
-
-    incident_number = request.form.get("incident_number")
-    data = get_preview_data(incident_number)
-
-    final_problem = request.form.get("problem")
-    final_analysis = request.form.get("analysis")
-    final_resolution = request.form.get("resolution")
-
-    data["problem"] = final_problem
-    data["analysis"] = final_analysis
-    data["resolution"] = final_resolution
-
-    saved_problem_images = []
-    saved_root_images = []
-    saved_resolution_images = []
-
-    # problem images
-    for file in request.files.getlist("problem_images"):
-        if file.filename:
-            filename = f"{uuid.uuid4()}_{file.filename}"
-            path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(path)
-            saved_problem_images.append(path)
-
-    # root images
-    for file in request.files.getlist("root_images"):
-        if file.filename:
-            filename = f"{uuid.uuid4()}_{file.filename}"
-            path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(path)
-            saved_root_images.append(path)
-
-    # resolution images
-    for file in request.files.getlist("resolution_images"):
-        if file.filename:
-            filename = f"{uuid.uuid4()}_{file.filename}"
-            path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(path)
-            saved_resolution_images.append(path)
-
-    session["edited_data"] = {
-        "incident_number": incident_number,
-        "problem": final_problem,
-        "analysis": final_analysis,
-        "resolution": final_resolution,
-        "problem_images": saved_problem_images,
-        "root_images": saved_root_images,
-        "resolution_images": saved_resolution_images
-    }
-
-    preview_html = render_preview_html(
-        data,
-        root=final_problem,
-        l2=final_analysis,
-        resolution=final_resolution,
-        problem_images=saved_problem_images,
-        root_images=saved_root_images,
-        resolution_images=saved_resolution_images
-    )
-
-    return preview_html
-
-
-# -----------------------------------
-# Final download
-# -----------------------------------
-@app.route("/generate-report-final", methods=["POST"])
-def generate_report_final():
     try:
         incident_number = request.form.get("incident_number")
-        report_type = request.form.get("report_type")
+
+        data = get_preview_data(incident_number)
+
+        final_problem = request.form.get("problem")
+        final_analysis = request.form.get("analysis")
+        final_resolution = request.form.get("resolution")
+
+        data["problem"] = final_problem
+        data["analysis"] = final_analysis
+        data["resolution"] = final_resolution
+
+        saved_problem_images = []
+        saved_root_images = []
+        saved_resolution_images = []
+
+        # -----------------------------
+        # Problem images
+        # -----------------------------
+        for file in request.files.getlist("problem_images"):
+            if file.filename:
+                filename = f"{uuid.uuid4()}_{file.filename}"
+                path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(path)
+                saved_problem_images.append(path)
+
+        # -----------------------------
+        # Root images
+        # -----------------------------
+        for file in request.files.getlist("root_images"):
+            if file.filename:
+                filename = f"{uuid.uuid4()}_{file.filename}"
+                path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(path)
+                saved_root_images.append(path)
+
+        # -----------------------------
+        # Resolution images
+        # -----------------------------
+        for file in request.files.getlist("resolution_images"):
+            if file.filename:
+                filename = f"{uuid.uuid4()}_{file.filename}"
+                path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(path)
+                saved_resolution_images.append(path)
+
+        # Save edited data in session
+        session["edited_data"] = {
+            "incident_number": incident_number,
+            "problem": final_problem,
+            "analysis": final_analysis,
+            "resolution": final_resolution,
+            "problem_images": saved_problem_images,
+            "root_images": saved_root_images,
+            "resolution_images": saved_resolution_images
+        }
+
+        preview_html = render_preview_html(
+            data,
+            root=final_problem,
+            l2=final_analysis,
+            resolution=final_resolution,
+            problem_images=saved_problem_images,
+            root_images=saved_root_images,
+            resolution_images=saved_resolution_images
+        )
+
+        return preview_html
+
+    except Exception as e:
+        return str(e)
+
+
+# -----------------------------
+# WORD DOWNLOAD
+# -----------------------------
+@app.route("/download/word", methods=["POST"])
+def download_word():
+    incident_number = request.form.get("incident_number")
+
+    problem = request.form.get("problem_statement")
+    root = request.form.get("root_cause")
+    resolution = request.form.get("resolution")
+
+    edited_data = session.get("edited_data", {})
+
+    incident_data = get_preview_data(incident_number)
+
+    images = {
+        "problem": edited_data.get("problem_images", []),
+        "root": edited_data.get("root_images", []),
+        "resolution": edited_data.get("resolution_images", [])
+    }
+
+    word_bytes = generate_word_doc_wrapper(
+        data=incident_data,
+        root=problem,
+        l2=root,
+        res=resolution,
+        images=images
+    )
+
+    return send_file(
+        BytesIO(word_bytes),
+        as_attachment=True,
+        download_name=f"{incident_number}.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+
+# -----------------------------
+# PDF DOWNLOAD
+# -----------------------------
+@app.route("/download/pdf", methods=["POST"])
+def download_pdf():
+    incident_number = request.form.get("incident_number")
+
+    problem = request.form.get("problem_statement")
+    root = request.form.get("root_cause")
+    resolution = request.form.get("resolution")
+
+    edited_data = session.get("edited_data", {})
+
+    incident_data = get_preview_data(incident_number)
+
+    images = {
+        "problem": edited_data.get("problem_images", []),
+        "root": edited_data.get("root_images", []),
+        "resolution": edited_data.get("resolution_images", [])
+    }
+
+    pdf_bytes = generate_pdf(
+        data=incident_data,
+        root=problem,
+        l2=root,
+        res=resolution,
+        images=images
+    )
+
+    return send_file(
+        BytesIO(pdf_bytes),
+        as_attachment=True,
+        download_name=f"{incident_number}.pdf",
+        mimetype="application/pdf"
+    )
+
+# -----------------------------
+# ZIP DOWNLOAD
+# (optional placeholder)
+# -----------------------------
+@app.route("/download/zip", methods=["POST"])
+def download_zip():
+    incident_number = request.form.get("incident_number")
+
+    problem = request.form.get("problem_statement")
+    root = request.form.get("root_cause")
+    resolution = request.form.get("resolution")
+
+    edited_data = session.get("edited_data", {})
+
+    incident_data = get_preview_data(incident_number)
+
+    images = {
+        "problem": edited_data.get("problem_images", []),
+        "root": edited_data.get("root_images", []),
+        "resolution": edited_data.get("resolution_images", [])
+    }
+
+    pdf_bytes = generate_pdf(
+        data=incident_data,
+        root=problem,
+        l2=root,
+        res=resolution,
+        images=images
+    )
+
+    word_bytes = generate_word_doc_wrapper(
+        data=incident_data,
+        root=problem,
+        l2=root,
+        res=resolution,
+        images=images
+    )
+
+    zip_buffer = BytesIO()
+
+    with zipfile.ZipFile(
+        zip_buffer,
+        "w",
+        zipfile.ZIP_DEFLATED
+    ) as z:
+        z.writestr(
+            f"{incident_number}.pdf",
+            pdf_bytes
+        )
+
+        z.writestr(
+            f"{incident_number}.docx",
+            word_bytes
+        )
+
+    zip_buffer.seek(0)
+
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f"{incident_number}.zip",
+        mimetype="application/zip"
+    )
+
+
+# -----------------------------
+# FINAL REPORT GENERATOR
+# -----------------------------
+def generate_final_report(report_type):
+    try:
+        edited_data = session.get("edited_data", {})
+
+        incident_number = edited_data.get("incident_number")
+
+        if not incident_number:
+            return "No report generated yet"
 
         data = load_incident_data(incident_number)
-
-        edited_data = session.get("edited_data", {})
 
         final_problem = edited_data.get("problem")
         final_analysis = edited_data.get("analysis")
@@ -208,6 +398,9 @@ def generate_report_final():
         return str(e)
 
 
+# -----------------------------
+# OTHER MODULES
+# -----------------------------
 @app.route("/bulk")
 def bulk_page():
     return render_template("bulk.html")
@@ -223,5 +416,8 @@ def compare_page():
     return render_template("compare.html")
 
 
+# -----------------------------
+# RUN APP
+# -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)

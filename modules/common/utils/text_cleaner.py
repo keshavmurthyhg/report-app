@@ -29,7 +29,3 @@ def clean_text(text: str) -> str:
 
 def format_description(text):
     return clean_text(text)
-
-
-def add_images_pdf(*args, **kwargs):
-    return

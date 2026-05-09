@@ -1,294 +1,221 @@
 {% extends "base.html" %}
 
-{% block page_title %}
-RCA Report Generator
-{% endblock %}
-
 {% block sidebar %}
 
-<div class="filter-box">
-    <h3>Incident Actions</h3>
+<div class="sidebar-content">
 
-    <label>Incident Number</label>
-    <input type="text"
-           id="incident_number"
-           placeholder="Enter Incident Number">
+    <!-- TOP SCROLLABLE SECTION -->
+    <div class="sidebar-top-section">
 
-    <button type="button" onclick="loadPreview()">
-        Preview Report
-    </button>
-</div>
+        <!-- CLEAR -->
+        <div class="sidebar-top-actions">
+            <button class="clear-btn" onclick="clearPreview()">
+                Clear Workspace
+            </button>
+        </div>
 
-<div class="filter-box">
-    <h3>Filters</h3>
+        <!-- FILTERS -->
+        <div class="sidebar-accordion active">
+            <div class="accordion-header" onclick="toggleSidebarSection(this)">
+                <span>Filters</span>
+                <span class="accordion-icon">▼</span>
+            </div>
 
-    <label>Priority</label>
-    <select>
-        <option>All</option>
-        <option>P1</option>
-        <option>P2</option>
-        <option>P3</option>
-        <option>P4</option>
-    </select>
+            <div class="accordion-body">
+                <label>Priority</label>
+                <select id="priority_filter">
+                    <option value="All">All</option>
+                    <option value="Priority 1">P1</option>
+                    <option value="Priority 2">P2</option>
+                    <option value="Priority 3">P3</option>
+                    <option value="Priority 4">P4</option>
+                </select>
 
-    <label>Vendor</label>
-    <select>
-        <option>All</option>
-        <option>PTC</option>
-        <option>Azure</option>
-    </select>
-</div>
+                <label>Vendor</label>
+                <select id="vendor_filter">
+                    <option value="All">All</option>
+                    <option value="Azure">Azure</option>
+                    <option value="PTC">PTC</option>
+                </select>
+            </div>
+        </div>
 
-<div class="filter-box">
-    <h3>Downloads</h3>
-    <div id="downloadSidebar">
-        Download buttons appear after preview
+        <!-- DOWNLOADS -->
+        <div class="sidebar-accordion">
+            <div class="accordion-header" onclick="toggleSidebarSection(this)">
+                <span>Downloads</span>
+                <span class="accordion-icon">▼</span>
+            </div>
+
+            <div class="accordion-body">
+                <p id="downloadMessage" class="download-message">
+                    Generate preview to enable downloads
+                </p>
+
+                <div id="downloadButtons" class="download-buttons hidden">
+                    <button onclick="downloadReport('word')">Word</button>
+                    <button onclick="downloadReport('pdf')">PDF</button>
+                    <button onclick="downloadReport('zip')">ZIP</button>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+
+    <!-- FIXED BOTTOM SECTION -->
+    <div class="sidebar-bottom-section">
+
+        <!-- PROCESSING STATUS -->
+        <div class="status-panel">
+            <h4>Processing Status</h4>
+
+            <div class="progress-wrapper hidden" id="progressWrapper">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="progress-text" id="progressText">
+                    Starting...
+                </div>
+            </div>
+
+            <div class="status-message" id="statusMessage">
+                Ready
+            </div>
+        </div>
+
+        <!-- KPI FOOTER -->
+        <div class="sidebar-footer">
+            <p>Reports Today: 12</p>
+            <p>Pending: 4</p>
+            <p>Bulk Jobs: 2</p>
+        </div>
+
+    </div>
+
 </div>
 
-<div class="filter-box">
-    <h3>Actions</h3>
-
-    <button type="button"
-            class="secondary-btn"
-            onclick="clearPreview()">
-        Clear
-    </button>
-</div>
-
-{% endblock %}
-
-
-{% block kpi %}
-<div class="kpi-card">Reports Today: 12</div>
-<div class="kpi-card">Pending: 4</div>
-<div class="kpi-card">Bulk Jobs: 2</div>
 {% endblock %}
 
 
 {% block content %}
 
-<div class="content-grid">
-    <div class="right-panel">
+<!-- ========================= -->
+<!-- TOP NAVIGATION BAR -->
+<!-- ========================= -->
+<div class="top-nav-bar">
 
-        <!-- Preview -->
-        <div class="card">
-            <h3>Preview</h3>
-            <div id="previewContainer">
-                Preview will appear here
-            </div>
-        </div>
+    <!-- Left -->
+    <div class="top-nav-left">
+        <button class="top-home-btn" onclick="goHome()">
+            🏠 Home
+        </button>
+    </div>
 
-        <!-- Editable RCA -->
-        <div class="card">
-            <h3>Editable RCA</h3>
-
-            <label>Problem Statement</label>
-            <textarea id="problem_statement" rows="4"></textarea>
-
-            <div class="upload-row">
-                <input type="file"
-                       id="problem_images"
-                       multiple
-                       class="image-input">
-
-                <div id="problem_preview_files"></div>
-            </div>
-
-            <label>Root Cause</label>
-            <textarea id="root_cause" rows="4"></textarea>
-
-            <div class="upload-row">
-                <input type="file"
-                       id="root_images"
-                       multiple
-                       class="image-input">
-
-                <div id="root_preview_files"></div>
-            </div>
-
-            <label>Resolution</label>
-            <textarea id="resolution_text" rows="4"></textarea>
-
-            <div class="upload-row">
-                <input type="file"
-                       id="resolution_images"
-                       multiple
-                       class="image-input">
-
-                <div id="resolution_preview_files"></div>
-            </div>
-
-            <button type="button" onclick="updatePreview()">
-                Update Preview
-            </button>
+    <!-- Center -->
+    <div class="top-nav-center">
+        <div class="module-title-pill">
+            RCA Report Generator
         </div>
     </div>
+
+    <!-- Right -->
+    <div class="top-nav-right">
+        <button class="help-btn">?</button>
+    </div>
+
 </div>
 
 
-<script>
-let selectedFiles = {
-    problem: [],
-    root: [],
-    resolution: []
-};
+<!-- ========================= -->
+<!-- SECOND TOOLBAR -->
+<!-- ========================= -->
+<div class="toolbar-row">
+
+    <!-- Left -->
+    <div class="toolbar-left-section">
+        <input
+            type="text"
+            id="incident_number"
+            placeholder="Enter Incident Number">
+
+        <button onclick="loadPreview()">
+            Preview
+        </button>
+    </div>
+
+    <!-- Right -->
+    <div class="toolbar-right-section">
+        <input
+            type="text"
+            placeholder="Global Search (Later)"
+            disabled>
+    </div>
+
+</div>
 
 
-function loadPreview() {
-    const incident = document.getElementById("incident_number").value;
+<!-- ========================= -->
+<!-- SCROLLABLE CONTENT AREA -->
+<!-- ========================= -->
+<div class="scrollable-report-content">
 
-    fetch("/preview-report", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `incident_number=${incident}`
-    })
-    .then(res => res.text())
-    .then(html => {
-        document.getElementById("previewContainer").innerHTML = html;
+    <!-- Preview Section -->
+    <div class="card">
+        <h3>Preview</h3>
 
-        return fetch("/get-rca-data", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: `incident_number=${incident}`
-        });
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("problem_statement").value =
-            data.problem || "";
-
-        document.getElementById("root_cause").value =
-            data.analysis || "";
-
-        document.getElementById("resolution_text").value =
-            data.resolution || "";
-
-        document.getElementById("downloadSidebar").innerHTML = `
-            <div class="download-btn-row">
-
-                <form action="/generate-report-final" method="POST">
-                    <input type="hidden" name="incident_number" value="${incident}">
-                    <input type="hidden" name="report_type" value="word">
-                    <button type="submit">Word</button>
-                </form>
-
-                <form action="/generate-report-final" method="POST">
-                    <input type="hidden" name="incident_number" value="${incident}">
-                    <input type="hidden" name="report_type" value="pdf">
-                    <button type="submit">PDF</button>
-                </form>
-
-                <form action="/generate-bulk" method="POST">
-                    <input type="hidden" name="incident_numbers" value="${incident}">
-                    <button type="submit">ZIP</button>
-                </form>
-
-            </div>
-        `;
-    });
-}
+        <div id="previewContainer">
+            Preview will appear here
+        </div>
+    </div>
 
 
-function setupFilePreview(inputId, previewId, key) {
-    const input = document.getElementById(inputId);
+    <!-- Editable RCA Section -->
+    <div class="card">
+        <h3>Editable RCA</h3>
 
-    input.addEventListener("change", function () {
-        const files = Array.from(input.files);
+        <!-- Problem -->
+        <label>Problem Statement</label>
+        <textarea id="problem_statement" rows="4"></textarea>
 
-        files.forEach(file => {
-            selectedFiles[key].push(file);
-        });
-
-        renderFilePreview(previewId, key);
-        input.value = "";
-    });
-}
+        <div class="upload-row">
+            <input type="file" id="problem_images" multiple>
+            <div id="problem_preview_files"></div>
+        </div>
 
 
-function renderFilePreview(previewId, key) {
-    const container = document.getElementById(previewId);
+        <!-- Root Cause -->
+        <label>Root Cause</label>
+        <textarea id="root_cause" rows="4"></textarea>
 
-    container.innerHTML = "";
-
-    selectedFiles[key].forEach((file, index) => {
-        container.innerHTML += `
-            <div class="uploaded-file-chip">
-                ${file.name}
-                <span onclick="removeFile('${key}', ${index}, '${previewId}')">✕</span>
-            </div>
-        `;
-    });
-}
+        <div class="upload-row">
+            <input type="file" id="root_images" multiple>
+            <div id="root_preview_files"></div>
+        </div>
 
 
-function removeFile(key, index, previewId) {
-    selectedFiles[key].splice(index, 1);
-    renderFilePreview(previewId, key);
-}
+        <!-- Resolution -->
+        <label>Resolution</label>
+        <textarea id="resolution_text" rows="4"></textarea>
+
+        <div class="upload-row">
+            <input type="file" id="resolution_images" multiple>
+            <div id="resolution_preview_files"></div>
+        </div>
 
 
-setupFilePreview("problem_images", "problem_preview_files", "problem");
-setupFilePreview("root_images", "root_preview_files", "root");
-setupFilePreview("resolution_images", "resolution_preview_files", "resolution");
+        <!-- Update -->
+        <button onclick="updatePreview()">
+            Update Preview
+        </button>
+    </div>
+
+</div>
 
 
-function updatePreview() {
-    const incident = document.getElementById("incident_number").value;
-
-    const formData = new FormData();
-
-    formData.append("incident_number", incident);
-    formData.append("problem", document.getElementById("problem_statement").value);
-    formData.append("analysis", document.getElementById("root_cause").value);
-    formData.append("resolution", document.getElementById("resolution_text").value);
-
-    selectedFiles.problem.forEach(file => {
-        formData.append("problem_images", file);
-    });
-
-    selectedFiles.root.forEach(file => {
-        formData.append("root_images", file);
-    });
-
-    selectedFiles.resolution.forEach(file => {
-        formData.append("resolution_images", file);
-    });
-
-    fetch("/update-preview", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.text())
-    .then(html => {
-        document.getElementById("previewContainer").innerHTML = html;
-    });
-}
-
-
-function clearPreview() {
-    document.getElementById("previewContainer").innerHTML =
-        "Preview will appear here";
-
-    document.getElementById("problem_statement").value = "";
-    document.getElementById("root_cause").value = "";
-    document.getElementById("resolution_text").value = "";
-
-    selectedFiles.problem = [];
-    selectedFiles.root = [];
-    selectedFiles.resolution = [];
-
-    document.getElementById("problem_preview_files").innerHTML = "";
-    document.getElementById("root_preview_files").innerHTML = "";
-    document.getElementById("resolution_preview_files").innerHTML = "";
-
-    document.getElementById("downloadSidebar").innerHTML =
-        "Download buttons appear after preview";
-}
-</script>
+<script src="{{ url_for('static', filename='js/report.js') }}"></script>
 
 {% endblock %}
+
+

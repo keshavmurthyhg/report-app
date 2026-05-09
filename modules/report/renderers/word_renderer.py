@@ -3,7 +3,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches, Pt
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-
+from modules.common.utils.image_utils import add_images_word
 from modules.report.layout.footer import apply_word_footer
 from modules.common.utils.links import apply_word_link
 from modules.common.utils.formatters import (
@@ -252,46 +252,45 @@ def generate_word_doc(
     doc.add_paragraph("")
 
     # -----------------------------------
-    # RCA SECTIONS
+    # RCA SECTIONS + IMAGES
     # -----------------------------------
-    sections = {
-        "PROBLEM STATEMENT": root,
-        "ROOT CAUSE": l2,
-        "RESOLUTION & RECOMMENDATION": res
-    }
-    
-    for title, content in sections.items():
-    
-        # Section heading
+    sections = [
+        ("PROBLEM STATEMENT", root, images.get("problem", [])),
+        ("ROOT CAUSE", l2, images.get("root", [])),
+        ("RESOLUTION & RECOMMENDATION", res, images.get("resolution", []))
+    ]
+
+    for title, content, section_images in sections:
+
         heading = doc.add_heading(title, level=1)
         heading.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    
+
         content = safe_text(content)
-    
+
         if str(content).lower() in ["nan", "nat", "none", ""]:
             content = "-"
-    
+
+        # Add text content
         for line in content.split("\n"):
             cleaned_line = clean_text(
                 line.strip("- ").strip()
             )
-    
+
             if cleaned_line:
                 p = doc.add_paragraph(style="List Bullet")
-            
-                run = p.add_run(cleaned_line)
-            
-                # Keep paragraph aligned with table width
+
+                p.add_run(cleaned_line)
+
                 p.paragraph_format.left_indent = Inches(0.25)
-            
-                # Hanging indent:
-                # bullet stays left
-                # wrapped text aligns with first line text
                 p.paragraph_format.first_line_indent = Inches(-0.18)
-            
                 p.paragraph_format.space_after = Pt(4)
-    
-        doc.add_paragraph("")
+
+        # Add uploaded images
+        if section_images:
+            add_images_word(
+                doc,
+                section_images
+            )
         
     # -----------------------------------
     # FOOTER

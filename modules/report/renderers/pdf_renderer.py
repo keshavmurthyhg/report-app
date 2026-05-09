@@ -10,7 +10,7 @@ from modules.report.layout.footer import pdf_footer
 
 from modules.common.utils.links import get_url, make_pdf_link
 from modules.common.utils.formatters import format_date, safe_pdf_text, safe_table
-from modules.common.utils.text_cleaner import add_images_pdf
+from modules.common.utils.image_utils import add_images_pdf
 
 
 # ================= SAFE HEADER VALUE ================= #
@@ -104,7 +104,7 @@ def generate_pdf_doc(data, root, l2, res, images):
 
     # ================= FOOTER ================= #
     footer = pdf_footer(data)
-
+    
     try:
         doc.build(elements, onFirstPage=footer, onLaterPages=footer)
     except Exception as e:
