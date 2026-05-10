@@ -18,6 +18,11 @@ from modules.report.report_service import (
     load_incident_data
 )
 
+from modules.bulk.bulk_service import (
+    filter_incidents,
+    generate_bulk_zip_file
+)
+
 from modules.report.services.preview_service import get_preview_data
 
 from modules.report.doc_generator import (
@@ -337,6 +342,97 @@ def download_zip():
         download_name=f"{incident_number}.zip",
         mimetype="application/zip"
     )
+
+@app.route("/bulk/filter-incidents", methods=["POST"])
+def bulk_filter_route():
+    try:
+        data = request.json
+
+        incidents = filter_incidents(
+            priority=data.get("priority"),
+            year=data.get("year"),
+            from_date=data.get("from_date"),
+            to_date=data.get("to_date")
+        )
+
+        return jsonify({
+            "success": True,
+            "incidents": incidents
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })
+
+@app.route("/bulk/download-zip", methods=["POST"])
+def bulk_download_zip_route():
+    try:
+        data = request.json
+
+        incident_text = data.get(
+            "incidents",
+            ""
+        )
+
+        incident_numbers = [
+            x.strip()
+            for x in incident_text.split(",")
+            if x.strip()
+        ]
+
+        zip_buffer = generate_bulk_zip_file(
+            incident_numbers
+        )
+
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name="bulk_reports.zip",
+            mimetype="application/zip"
+        )
+
+    except Exception as e:
+        return str(e)
+
+
+@app.route("/bulk/download-failed-report", methods=["POST"])
+def bulk_failed_report():
+    try:
+        data = request.json
+        failed_incidents = data.get("failed_incidents", [])
+
+        if not failed_incidents:
+            return jsonify({
+                "success": False,
+                "message": "No failed incidents found"
+            })
+
+        csv_buffer = BytesIO()
+
+        import pandas as pd
+
+        df = pd.DataFrame({
+            "Incident Number": failed_incidents
+        })
+
+        df.to_csv(
+            csv_buffer,
+            index=False
+        )
+
+        csv_buffer.seek(0)
+
+        return send_file(
+            csv_buffer,
+            as_attachment=True,
+            download_name="failed_incidents.csv",
+            mimetype="text/csv"
+        )
+
+    except Exception as e:
+        return str(e)
 
 
 # -----------------------------

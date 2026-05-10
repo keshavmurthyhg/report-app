@@ -1,60 +1,234 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Bulk Generate</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
-<div class="container">
-    <h1>Bulk Report Generator</h1>
+{% block page_css %}
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/bulk.css') }}">
+{% endblock %}
 
-    <p>
-        Enter multiple incident numbers
-        separated by commas
-    </p>
+{% block sidebar %}
+<div class="sidebar-content">
 
-    <form
-        action="/generate-bulk"
-        method="POST"
-    >
+    <!-- TOP -->
+    <div class="sidebar-top-section">
 
-        <textarea
-            name="incident_numbers"
-            rows="8"
-            cols="50"
-            placeholder="INC12345, INC67890"
-            required
-        ></textarea>
+        <div class="sidebar-top-actions">
+            <button class="clear-btn" onclick="clearBulkWorkspace()">
+                Clear Workspace
+            </button>
+        </div>
 
-        <br><br>
+        <!-- Download -->
+        <div class="sidebar-accordion active">
+            <div class="accordion-header"
+                 onclick="toggleSidebarSection(this)">
+                <span>Download Options</span>
+                <span>▼</span>
+            </div>
 
-        <select
-            name="report_type"
-            required
-        >
-            <option value="">
-                Select Output Type
-            </option>
-            <option value="word">
-                Word Reports
-            </option>
-            <option value="pdf">
-                PDF Reports
-            </option>
-        </select>
+            <div class="accordion-body">
 
-        <br><br>
+                <p class="download-label">
+                    Select report output format
+                </p>
 
-        <button type="submit">
-            Generate Bulk Reports
+                <div class="download-buttons">
+                    <button onclick="setBulkOutputType('pdf')">PDF</button>
+                    <button onclick="setBulkOutputType('word')">Word</button>
+                    <button onclick="setBulkOutputType('both')">Both</button>
+                </div>
+
+                <div class="download-buttons" style="margin-top:10px;">
+                    <button onclick="downloadBulkZip()">Download ZIP</button>
+                    <button onclick="downloadFailedReport()">Failed Report</button>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- Filters -->
+        <div class="sidebar-accordion">
+            <div class="accordion-header"
+                 onclick="toggleSidebarSection(this)">
+                <span>Filters</span>
+                <span>▼</span>
+            </div>
+
+            <div class="accordion-body">
+
+                <label>Priority</label>
+                <select id="bulk_priority_filter">
+                    <option value="">All Priorities</option>
+                    <option value="Priority 1">Priority 1</option>
+                    <option value="Priority 2">Priority 2</option>
+                    <option value="Priority 3">Priority 3</option>
+                    <option value="Priority 4">Priority 4</option>
+                </select>
+
+                <label>Date Range</label>
+
+                <div class="filter-row">
+
+                    <div class="filter-half">
+                        <label>Preset</label>
+                        <select id="bulk_preset_date_filter">
+                            <option value="">Select</option>
+                            <option>1 Week</option>
+                            <option>1 Month</option>
+                            <option>3 Months</option>
+                            <option>6 Months</option>
+                            <option>1 Year</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-half">
+                        <label>Year</label>
+                        <select id="bulk_year_filter">
+                            <option value="">Select</option>
+                            <option>2020</option>
+                            <option>2021</option>
+                            <option>2022</option>
+                            <option>2023</option>
+                            <option>2024</option>
+                            <option>2025</option>
+                            <option>2026</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-half">
+                        <label>From</label>
+                        <input type="date" id="bulk_from_date">
+                    </div>
+
+                    <div class="filter-half">
+                        <label>To</label>
+                        <input type="date" id="bulk_to_date">
+                    </div>
+                </div>
+
+                <button onclick="applyBulkFilters()">
+                    Apply Filters
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- BOTTOM -->
+    <div class="sidebar-bottom-section">
+
+        <div class="status-panel">
+            <h4>Processing Status</h4>
+
+            <div class="progress-wrapper hidden" id="progressWrapper">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="progress-text" id="progressText">
+                    Starting...
+                </div>
+            </div>
+
+            <div class="status-message" id="statusMessage">
+                Ready
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <p>Total Jobs: <span id="totalJobs">0</span></p>
+            <p>Success: <span id="successJobs">0</span></p>
+            <p>Failed: <span id="failedJobs">0</span></p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+
+
+{% block content %}
+
+<input type="hidden" id="bulk_output_type" value="both">
+
+<!-- TOP NAV -->
+<div class="top-nav-bar">
+
+    <div class="top-nav-left">
+        <button class="top-home-btn" onclick="goHome()">
+            🏠 Home
         </button>
-    </form>
+    </div>
 
-    <br>
-    <a href="/">Back Home</a>
+    <div class="top-nav-center">
+        <div class="module-title-pill">
+            Bulk Report Generator
+        </div>
+    </div>
+
+    <div class="top-nav-right">
+        <button class="help-btn">?</button>
+    </div>
 
 </div>
 
-</body>
-</html>
+
+<!-- TOOLBAR -->
+<div class="toolbar-row">
+
+    <div class="toolbar-left-section">
+        <button onclick="generateBulkReports()">
+            Generate Reports
+        </button>
+    </div>
+
+    <div class="toolbar-right-section">
+        <input
+            type="text"
+            placeholder="Global Search (Later)"
+            disabled>
+    </div>
+
+</div>
+
+<div class="scrollable-report-content">
+
+    <div class="bulk-main-layout">
+
+        <div class="card bulk-input-card">
+            <h3>Bulk Input</h3>
+
+            <label>Enter Incident Numbers</label>
+
+            <textarea id="bulk_incidents"
+                      placeholder="INC12345, INC67890"></textarea>
+        </div>
+
+
+        <div class="card bulk-results-card">
+
+            <div class="results-section">
+
+                <h3>Bulk Results</h3>
+
+                <div id="bulkResultsContainer" class="results-content">
+                    No reports generated yet
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/bulk.js') }}"></script>
+
+{% endblock %}

@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <!--<title>Ops Platform</title>-->
 
+    <!-- Global CSS -->
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/app.css') }}">
+
+    <!-- Page specific CSS -->
+    {% block page_css %}
+    {% endblock %}
 </head>
+
 <body>
 
 <div class="app-layout">
@@ -28,7 +34,6 @@
     <!-- MAIN CONTENT -->
     <div class="main-content">
 
-        <!-- REMOVE OLD HEADER COMPLETELY -->
         <main class="content-area">
             {% block content %}
             {% endblock %}

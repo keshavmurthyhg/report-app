@@ -1,0 +1,173 @@
+.bulk-main-layout {
+    display: flex;
+    gap: 20px;
+}
+
+.bulk-input-card {
+    width: 45%;
+}
+
+.bulk-results-card {
+    width: 55%;
+    min-height: 500px;
+}
+
+.bulk-input-card textarea {
+    width: 100%;
+    min-height: 420px;
+}
+
+.results-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.results-content {
+    flex: 1;
+    margin-top: 20px;
+}
+
+.results-footer {
+    display: none;
+}
+
+.resend-btn {
+    background: #d97706;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+}
+
+/* Filters */
+.filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.filter-half {
+    flex: 1;
+}
+
+.filter-half select,
+.filter-half input {
+    width: 100%;
+}
+
+/* Sidebar */
+.compact-sidebar {
+    height: 100vh;
+}
+
+.compact-sidebar .sidebar-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.compact-sidebar .sidebar-top-section {
+    flex: 2;
+}
+
+.compact-sidebar .sidebar-bottom-section {
+    margin-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .bulk-main-layout {
+        flex-direction: column;
+    }
+
+    .bulk-input-card,
+    .bulk-results-card {
+        width: 100%;
+    }
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    table-layout: fixed;
+}
+
+.results-table th,
+.results-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+.results-table th {
+    background: #f3f4f6;
+}
+
+.table-filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.results-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.status-success {
+    color: green;
+    font-weight: 600;
+}
+
+.status-failed {
+    color: red;
+    font-weight: 600;
+}
+
+.table-filter-bar button {
+    background: #1e4f8a;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.resend-btn {
+    background: #1e4f8a;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Reduce bottom spacing after KPI */
+.bulk-kpi-section,
+.kpi-section,
+.sidebar-kpi {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+}
+
+/* If sidebar container is adding extra space */
+.bulk-sidebar {
+    gap: 8px;
+}
+
+.download-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #d9e4ff;
+    margin-bottom: 8px;
+}
+
