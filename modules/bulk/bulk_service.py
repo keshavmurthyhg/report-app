@@ -1,6 +1,10 @@
 import logging
 import pandas as pd
 
+from modules.common.logger import setup_logger
+
+logger = setup_logger("bulk")
+
 # IMPORTANT:
 # use existing working generator
 from modules.report.bulk_generator import (
@@ -8,7 +12,7 @@ from modules.report.bulk_generator import (
     generate_bulk_zip
 )
 
-logger = logging.getLogger(__name__)
+# --- logger = logging.getLogger(__name__)
 
 
 # ------------------------------
@@ -43,11 +47,22 @@ def filter_incidents(
     to_date=None
 ):
     try:
+        logger.info("Bulk filter started")
+        logger.info(
+            f"Inputs → priority={priority}, "
+            f"year={year}, "
+            f"from={from_date}, "
+            f"to={to_date}"
+        )
+
         df = load_snow_data()
 
         # Priority filter
         if priority and priority != "All Priorities":
             df = df[df["priority"] == priority]
+            logger.info(
+                f"After priority filter: {len(df)} records"
+            )
 
         # Year filter
         if year and year != "Select":
@@ -55,20 +70,29 @@ def filter_incidents(
                 pd.to_datetime(df["created"]).dt.year
                 == int(year)
             ]
+            logger.info(
+                f"After year filter: {len(df)} records"
+            )
 
-        # Custom from date
+        # From date filter
         if from_date:
             df = df[
                 pd.to_datetime(df["created"])
                 >= pd.to_datetime(from_date)
             ]
+            logger.info(
+                f"After from_date filter: {len(df)} records"
+            )
 
-        # Custom to date
+        # To date filter
         if to_date:
             df = df[
                 pd.to_datetime(df["created"])
                 <= pd.to_datetime(to_date)
             ]
+            logger.info(
+                f"After to_date filter: {len(df)} records"
+            )
 
         incidents = (
             df["number"]
@@ -78,7 +102,7 @@ def filter_incidents(
         )
 
         logger.info(
-            f"Filtered incidents: {incidents}"
+            f"Final incidents fetched: {len(incidents)}"
         )
 
         return incidents
@@ -95,11 +119,12 @@ def generate_bulk_zip_file(
     incident_numbers
 ):
     try:
-        df = load_snow_data()
-
         logger.info(
-            f"Generating reports for {incident_numbers}"
+            f"Bulk generation started for: "
+            f"{incident_numbers}"
         )
+
+        df = load_snow_data()
 
         reports = build_bulk_reports(
             df=df,
@@ -107,11 +132,15 @@ def generate_bulk_zip_file(
         )
 
         logger.info(
-            f"Generated {len(reports)} reports"
+            f"Reports generated: {len(reports)}"
         )
 
         zip_buffer = generate_bulk_zip(
             reports
+        )
+
+        logger.info(
+            "ZIP generated successfully"
         )
 
         return zip_buffer

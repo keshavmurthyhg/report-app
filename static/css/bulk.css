@@ -1,135 +1,92 @@
+/* =========================================================
+   BULK PAGE MAIN LAYOUT
+   Purpose:
+   Controls left/right card layout in main content area
+========================================================= */
+
 .bulk-main-layout {
     display: flex;
     gap: 20px;
 }
 
+/* Left card */
 .bulk-input-card {
     width: 45%;
 }
 
+/* Right card */
 .bulk-results-card {
     width: 55%;
     min-height: 500px;
 }
 
+
+/* =========================================================
+   BULK INPUT SECTION
+   Purpose:
+   Keeps textarea aligned properly
+========================================================= */
+
+.bulk-input-card h3,
+.bulk-results-card h3 {
+    margin-bottom: 8px;
+    padding: 0;
+}
+
+.bulk-input-card label {
+    display: block;
+    margin-bottom: 8px;
+}
+
 .bulk-input-card textarea {
     width: 100%;
     min-height: 420px;
+    resize: none;
 }
+
+
+/* =========================================================
+   RESULTS SECTION
+   Purpose:
+   Fixes table alignment issue
+   Ensures results start at same level as textarea
+========================================================= */
 
 .results-section {
     display: flex;
     flex-direction: column;
     height: 100%;
+    padding-top: 0;
+    margin-top: 0;
 }
 
 .results-content {
     flex: 1;
-    margin-top: 20px;
+    padding-top: 0;
+    margin-top: 0;
 }
 
-.results-footer {
-    display: none;
-}
 
-.resend-btn {
-    background: #d97706;
-    color: white;
-    padding: 8px 14px;
-    border: none;
-    border-radius: 6px;
-}
+/* =========================================================
+   RESULTS TOOLBAR
+   Purpose:
+   Align filter buttons + resend button
+========================================================= */
 
-/* Filters */
-.filter-row {
+.results-toolbar {
     display: flex;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.filter-half {
-    flex: 1;
-}
-
-.filter-half select,
-.filter-half input {
-    width: 100%;
-}
-
-/* Sidebar */
-.compact-sidebar {
-    height: 100vh;
-}
-
-.compact-sidebar .sidebar-content {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.compact-sidebar .sidebar-top-section {
-    flex: 2;
-}
-
-.compact-sidebar .sidebar-bottom-section {
-    margin-top: 10px;
-    padding-bottom: 10px;
-}
-
-/* Responsive */
-@media (max-width: 1100px) {
-    .bulk-main-layout {
-        flex-direction: column;
-    }
-
-    .bulk-input-card,
-    .bulk-results-card {
-        width: 100%;
-    }
-}
-
-.results-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    table-layout: fixed;
-}
-
-.results-table th,
-.results-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-    word-wrap: break-word;
-}
-
-.results-table th {
-    background: #f3f4f6;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .table-filter-bar {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-}
-
-.results-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.status-success {
-    color: green;
-    font-weight: 600;
-}
-
-.status-failed {
-    color: red;
-    font-weight: 600;
 }
 
 .table-filter-bar button {
@@ -151,17 +108,140 @@
     white-space: nowrap;
 }
 
-/* Reduce bottom spacing after KPI */
-.bulk-kpi-section,
-.kpi-section,
-.sidebar-kpi {
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+
+/* =========================================================
+   RESULTS TABLE
+   Purpose:
+   Keeps table compact and readable
+========================================================= */
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 0;
 }
 
-/* If sidebar container is adding extra space */
+.results-table th,
+.results-table td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: center;
+    word-wrap: break-word;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.results-table th {
+    background: #f3f4f6;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   STATUS COLORS
+   Purpose:
+   Show success/failure clearly
+========================================================= */
+
+.status-success {
+    color: green;
+    font-weight: 600;
+}
+
+.status-failed {
+    color: red;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   FILTER ROWS
+   Purpose:
+   Keeps preset/year/from/to compact
+========================================================= */
+
+.filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: flex-start;
+}
+
+.filter-half {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.filter-half select,
+.filter-half input {
+    width: 100%;
+    max-width: 90px;
+    height: 30px;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   BULK SIDEBAR LAYOUT
+   Purpose:
+   Fixed top buttons
+   Scrollable middle
+   Fixed KPI bottom
+========================================================= */
+
 .bulk-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   TOP FIXED BUTTONS
+   Purpose:
+   Clear + Apply always visible
+========================================================= */
+
+.bulk-sidebar-fixed-top {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.top-action-row {
+    display: flex;
     gap: 8px;
+}
+
+.sidebar-btn {
+    flex: 1;
+    background: #486a96;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+}
+
+
+/* =========================================================
+   SCROLLABLE MIDDLE SECTION
+   Purpose:
+   Only filters/download scroll
+========================================================= */
+
+.bulk-sidebar-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
 }
 
 .download-label {
@@ -171,3 +251,87 @@
     margin-bottom: 8px;
 }
 
+
+/* =========================================================
+   BOTTOM FIXED STATUS
+   Purpose:
+   Processing status + KPI fixed
+========================================================= */
+
+.sidebar-bottom-section {
+    flex-shrink: 0;
+    padding: 8px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+
+/* =========================================================
+   KPI ROW
+   Purpose:
+   Single row KPI layout
+========================================================= */
+
+.compact-kpi-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.kpi-item {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 4px;
+    text-align: center;
+}
+
+.kpi-label {
+    display: block;
+    font-size: 10px;
+    color: #d9e4ff;
+    margin-bottom: 2px;
+}
+
+.kpi-value {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+}
+
+.success-kpi .kpi-value {
+    color: #4ade80;
+}
+
+.failed-kpi .kpi-value {
+    color: #f87171;
+}
+
+
+/* =========================================================
+   REMOVE UNUSED OLD FOOTER
+========================================================= */
+
+.results-footer {
+    display: none;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   Purpose:
+   Stack cards on smaller screens
+========================================================= */
+
+@media (max-width: 1100px) {
+    .bulk-main-layout {
+        flex-direction: column;
+    }
+
+    .bulk-input-card,
+    .bulk-results-card {
+        width: 100%;
+    }
+}

@@ -6,16 +6,24 @@
 {% endblock %}
 
 {% block sidebar %}
-<div class="sidebar-content">
+<div class="sidebar-content bulk-sidebar">
 
-    <!-- TOP -->
-    <div class="sidebar-top-section">
-
-        <div class="sidebar-top-actions">
-            <button class="clear-btn" onclick="clearBulkWorkspace()">
+    <!-- FIXED TOP ACTIONS -->
+    <div class="bulk-sidebar-fixed-top">
+        <div class="top-action-row">
+            <button onclick="clearBulkWorkspace()" class="sidebar-btn">
                 Clear Workspace
             </button>
+
+            <button onclick="applyBulkFilters()" class="sidebar-btn">
+                Apply Filters
+            </button>
         </div>
+    </div>
+
+
+    <!-- ONLY THIS PART SCROLLS -->
+    <div class="bulk-sidebar-scrollable">
 
         <!-- Download -->
         <div class="sidebar-accordion active">
@@ -47,7 +55,7 @@
 
 
         <!-- Filters -->
-        <div class="sidebar-accordion">
+        <div class="sidebar-accordion active">
             <div class="accordion-header"
                  onclick="toggleSidebarSection(this)">
                 <span>Filters</span>
@@ -68,7 +76,6 @@
                 <label>Date Range</label>
 
                 <div class="filter-row">
-
                     <div class="filter-half">
                         <label>Preset</label>
                         <select id="bulk_preset_date_filter">
@@ -94,7 +101,6 @@
                             <option>2026</option>
                         </select>
                     </div>
-
                 </div>
 
                 <div class="filter-row">
@@ -109,41 +115,53 @@
                     </div>
                 </div>
 
-                <button onclick="applyBulkFilters()">
-                    Apply Filters
-                </button>
-
             </div>
         </div>
 
     </div>
 
 
-    <!-- BOTTOM -->
+    <!-- FIXED KPI -->
     <div class="sidebar-bottom-section">
 
         <div class="status-panel">
             <h4>Processing Status</h4>
 
-            <div class="progress-wrapper hidden" id="progressWrapper">
+            <div class="progress-wrapper hidden"
+                 id="progressWrapper">
+
                 <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-fill"
+                         id="progressFill"></div>
                 </div>
 
-                <div class="progress-text" id="progressText">
+                <div class="progress-text"
+                     id="progressText">
                     Starting...
                 </div>
             </div>
 
-            <div class="status-message" id="statusMessage">
+            <div class="status-message"
+                 id="statusMessage">
                 Ready
             </div>
         </div>
 
-        <div class="sidebar-footer">
-            <p>Total Jobs: <span id="totalJobs">0</span></p>
-            <p>Success: <span id="successJobs">0</span></p>
-            <p>Failed: <span id="failedJobs">0</span></p>
+        <div class="sidebar-footer compact-kpi-row">
+            <div class="kpi-item">
+                <span class="kpi-label">Total</span>
+                <span class="kpi-value" id="totalJobs">0</span>
+            </div>
+
+            <div class="kpi-item success-kpi">
+                <span class="kpi-label">Success</span>
+                <span class="kpi-value" id="successJobs">0</span>
+            </div>
+
+            <div class="kpi-item failed-kpi">
+                <span class="kpi-label">Failed</span>
+                <span class="kpi-value" id="failedJobs">0</span>
+            </div>
         </div>
 
     </div>
@@ -218,7 +236,41 @@
                 <h3>Bulk Results</h3>
 
                 <div id="bulkResultsContainer" class="results-content">
-                    No reports generated yet
+
+                    <div class="results-toolbar">
+
+                        <div class="table-filter-bar">
+                            <button onclick="filterResults('all')">All</button>
+                            <button onclick="filterResults('successful')">Successful</button>
+                            <button onclick="filterResults('failed')">Failed</button>
+                        </div>
+
+                        <button class="resend-btn"
+                                onclick="resendFailedJobs()">
+                            Resend Failed Jobs
+                        </button>
+
+                    </div>
+
+                    <table class="results-table" id="bulkResultsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Incident Number</th>
+                                <th>Output Type</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="bulkResultsBody">
+                            <tr>
+                                <td colspan="4">
+                                    No reports generated yet
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </div>
 
             </div>

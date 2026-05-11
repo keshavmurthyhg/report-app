@@ -1,6 +1,21 @@
 /* -------------------------
    PROGRESS FUNCTIONS
 ------------------------- */
+function formatBulkDate(dateValue) {
+    const date = new Date(dateValue);
+
+    const months = [
+        "Jan", "Feb", "Mar", "Apr",
+        "May", "Jun", "Jul", "Aug",
+        "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+}
 
 function showProgress(message) {
     document.getElementById("progressWrapper")
@@ -33,6 +48,12 @@ function completeProgress(message) {
 
     document.getElementById("statusMessage")
         .innerText = message;
+
+    // Hide progress bar after completion
+    setTimeout(() => {
+        document.getElementById("progressWrapper")
+            .classList.add("hidden");
+    }, 1200);
 }
 
 
@@ -88,7 +109,7 @@ function generateBulkReports() {
 
                     rows += `
                         <tr data-status="${status.toLowerCase()}">
-                            <td>${new Date().toLocaleDateString()}</td>
+                            <td>${formatBulkDate(new Date())}</td>
                             <td>${incident}</td>
                             <td>${outputType.toUpperCase()}</td>
                             <td class="${
@@ -102,49 +123,7 @@ function generateBulkReports() {
                     `;
                 });
 
-                document.getElementById(
-                    "bulkResultsContainer"
-                ).innerHTML = `
-                    <div class="results-toolbar">
-
-                        <div class="table-filter-bar">
-                            <button onclick="filterResults('all')">
-                                All
-                            </button>
-
-                            <button onclick="filterResults('successful')">
-                                Successful
-                            </button>
-
-                            <button onclick="filterResults('failed')">
-                                Failed
-                            </button>
-                        </div>
-
-                        <button class="resend-btn"
-                                onclick="resendFailedJobs()">
-                            Resend Failed Jobs
-                        </button>
-
-                    </div>
-
-                    <table class="results-table"
-                        id="bulkResultsTable">
-
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Incident Number</th>
-                                <th>Output Type</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                `;
+                document.getElementById("bulkResultsBody").innerHTML = rows;
 
                 document.getElementById("totalJobs").innerText =
                     incidentList.length;
@@ -175,7 +154,7 @@ function filterResults(type) {
         if (type === "all") {
             row.style.display = "";
         }
-        else if (type === "success") {
+        else if (type === "successful") {
             row.style.display =
                 status.includes("successful")
                 ? ""
@@ -393,14 +372,64 @@ function setBulkOutputType(type) {
 ------------------------- */
 
 function clearBulkWorkspace() {
-    document.getElementById("bulk_incidents").value = "";
-    document.getElementById("bulkResultsContainer").innerHTML =
-        "No reports generated yet";
 
+    /* -------------------------
+       Clear incident textarea
+    ------------------------- */
+    document.getElementById("bulk_incidents").value = "";
+
+    /* -------------------------
+       Clear results table
+    ------------------------- */
+    document.getElementById("bulkResultsBody").innerHTML = `
+        <tr>
+            <td colspan="4">
+                No reports generated yet
+            </td>
+        </tr>
+    `;
+
+    /* -------------------------
+       Reset output type
+    ------------------------- */
+    document.getElementById("bulk_output_type").value = "both";
+
+    /* -------------------------
+       Reset priority filter
+    ------------------------- */
+    document.getElementById("bulk_priority_filter").value = "";
+
+    /* -------------------------
+       Reset preset filter
+    ------------------------- */
+    document.getElementById("bulk_preset_date_filter").value = "";
+
+    /* -------------------------
+       Reset year filter
+    ------------------------- */
+    document.getElementById("bulk_year_filter").value = "";
+
+    /* -------------------------
+       Reset custom date filters
+    ------------------------- */
+    document.getElementById("bulk_from_date").value = "";
+    document.getElementById("bulk_to_date").value = "";
+
+    /* -------------------------
+       Clear stored incidents
+    ------------------------- */
+    window.filteredIncidents = [];
+
+    /* -------------------------
+       Reset KPI
+    ------------------------- */
     document.getElementById("totalJobs").innerText = 0;
     document.getElementById("successJobs").innerText = 0;
     document.getElementById("failedJobs").innerText = 0;
 
+    /* -------------------------
+       Reset progress/status
+    ------------------------- */
     document.getElementById("statusMessage").innerText = "Ready";
 
     document.getElementById("progressWrapper")

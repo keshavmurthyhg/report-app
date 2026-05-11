@@ -11,6 +11,10 @@ from modules.common.utils.formatters import (
 )
 
 
+from modules.common.logger import setup_logger
+logger = setup_logger("rca")
+
+
 def load_incident_data(incident_number):
     """
     Load incident data from snow.xlsx
